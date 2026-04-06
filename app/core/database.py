@@ -10,8 +10,12 @@ DB_USER = os.getenv("DB_USER", "usuario_oracle")
 DB_PASSWORD = os.getenv("DB_PASSWORD", "password_oracle")
 DB_DSN = os.getenv("DB_DSN", "localhost:1521/XEPDB1")
 
+# Parsear el DSN (host:puerto/servicio) para construir la URL con service_name
+_host_port, _service = DB_DSN.rsplit("/", 1)
+
 # URL de conexión SQLAlchemy para oracledb (Modo Thin)
-SQLALCHEMY_DATABASE_URL = f"oracle+oracledb://{DB_USER}:{DB_PASSWORD}@{DB_DSN}"
+# Se usa ?service_name= para que Oracle no lo interprete como SID
+SQLALCHEMY_DATABASE_URL = f"oracle+oracledb://{DB_USER}:{DB_PASSWORD}@{_host_port}/?service_name={_service}"
 
 """
 Motor de la base de datos.
