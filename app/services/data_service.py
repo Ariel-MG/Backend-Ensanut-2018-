@@ -94,7 +94,7 @@ def _validar_columnas(columnas_solicitadas: list[str], columnas_validas: list[st
 def obtener_tablas(db: Session) -> Dict[str, Any]:
     """
     Obtiene la lista de todas las tablas disponibles con metadatos básicos.
-    Utiliza num_rows de user_tables para conteo rápido (aproximado).
+    Ejecuta COUNT(*) real por cada tabla para obtener conteos exactos.
 
     Args:
         db: Sesión activa de SQLAlchemy.
@@ -105,10 +105,12 @@ def obtener_tablas(db: Session) -> Dict[str, Any]:
     placeholders = ", ".join([f":t{i}" for i in range(len(TABLAS_PERMITIDAS))])
     params = {f"t{i}": t for i, t in enumerate(sorted(TABLAS_PERMITIDAS))}
 
+    # Obtener lista de tablas que realmente existen en la BD
     result = db.execute(
-        text(f"SELECT table_name, num_rows FROM user_tables WHERE table_name IN ({placeholders}) ORDER BY table_name"),
+        text(f"SELECT table_name FROM user_tables WHERE table_name IN ({placeholders}) ORDER BY table_name"),
         params
     )
+    nombres_tablas = [row[0] for row in result]
 
     # Obtener conteo de columnas por tabla
     col_result = db.execute(
@@ -117,15 +119,20 @@ def obtener_tablas(db: Session) -> Dict[str, Any]:
     )
     col_counts = {row[0]: row[1] for row in col_result}
 
+    # COUNT(*) real por cada tabla (las tablas están en la whitelist, es seguro)
+    row_counts: dict[str, int] = {}
+    for nombre in nombres_tablas:
+        count_result = db.execute(text(f"SELECT COUNT(*) FROM {nombre}"))
+        row_counts[nombre] = count_result.scalar()
+
     tablas = []
-    for row in result:
-        nombre = row[0]
+    for nombre in nombres_tablas:
         prefijo = nombre.split("_")[0]
         tablas.append({
             "nombre": nombre,
             "dominio": prefijo,
             "descripcion_dominio": _DOMINIOS.get(prefijo, "Desconocido"),
-            "total_registros": row[1] or 0,
+            "total_registros": row_counts.get(nombre, 0),
             "total_columnas": col_counts.get(nombre, 0),
         })
 
