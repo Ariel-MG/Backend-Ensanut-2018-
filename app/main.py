@@ -7,6 +7,7 @@ from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.ensanut_router import router as ensanut_router
+from app.api.metricas_router import router as metricas_router
 
 app = FastAPI(
     title="API de Extracción ENSANUT 2018",
@@ -32,6 +33,7 @@ app.add_middleware(
 
 # Integración de Rutas
 app.include_router(ensanut_router)
+app.include_router(metricas_router)
 
 @app.get("/", summary="Health Check", tags=["Sistema"])
 def health_check():

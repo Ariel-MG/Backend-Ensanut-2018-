@@ -63,3 +63,57 @@ class DiccionarioResponse(BaseModel):
     limite: int = Field(..., description="Resultados por página.")
     hay_mas: bool = Field(..., description="Si hay más páginas.")
     resultados: list[DiccionarioEntrada] = Field(..., description="Entradas del diccionario.")
+
+
+# ── Schemas de Métricas ──
+
+class EntidadDistribucion(BaseModel):
+    """Distribución de registros para una entidad federativa."""
+    codigo_entidad: Optional[str] = Field(None, description="Código INEGI de la entidad (01-32).")
+    nombre_entidad: str = Field(..., description="Nombre del estado.")
+    total: int = Field(..., description="Cantidad de registros en esta entidad.")
+    porcentaje: float = Field(..., description="Porcentaje respecto al total nacional.")
+
+
+class DistribucionEntidadResponse(BaseModel):
+    """Distribución geográfica de registros por entidad federativa."""
+    tabla: str = Field(..., description="Tabla de origen consultada.")
+    total_registros: int = Field(..., description="Total de registros con entidad válida.")
+    entidades: list[EntidadDistribucion] = Field(..., description="Distribución por estado, ordenada de mayor a menor.")
+
+
+class SexoDistribucion(BaseModel):
+    """Distribución por sexo."""
+    codigo: Optional[str] = Field(None, description="Código del sexo (1=Hombre, 2=Mujer).")
+    etiqueta: str = Field(..., description="Etiqueta legible del sexo.")
+    total: int = Field(..., description="Cantidad de registros.")
+
+
+class RangoEdadSexo(BaseModel):
+    """Conteo por rango de edad y sexo para pirámide poblacional."""
+    rango: str = Field(..., description="Rango de edad (ej. 0-4, 5-11, 12-19, 20-59, 60+).")
+    sexo_codigo: Optional[str] = Field(None, description="Código del sexo.")
+    sexo_etiqueta: str = Field(..., description="Etiqueta legible del sexo.")
+    total: int = Field(..., description="Cantidad de registros en este grupo.")
+
+
+class DemografiaResponse(BaseModel):
+    """Distribución demográfica por sexo y rangos de edad."""
+    tabla: str = Field(..., description="Tabla de origen consultada.")
+    distribucion_sexo: list[SexoDistribucion] = Field(..., description="Distribución por sexo (para Pie Chart).")
+    rangos_edad: list[RangoEdadSexo] = Field(..., description="Distribución por rango de edad y sexo (para histograma/pirámide).")
+
+
+class IndicadorSalud(BaseModel):
+    """Indicador de prevalencia de una condición de salud."""
+    condicion: str = Field(..., description="Clave de la condición (diabetes, hipertension, colesterol).")
+    etiqueta: str = Field(..., description="Nombre legible de la condición.")
+    total_encuestados: int = Field(..., description="Total de personas que respondieron la pregunta.")
+    total_positivos: int = Field(..., description="Total de personas con diagnóstico positivo.")
+    prevalencia_porcentaje: float = Field(..., description="Prevalencia como porcentaje del total encuestado.")
+
+
+class IndicadoresSaludResponse(BaseModel):
+    """Indicadores de prevalencia de condiciones de salud clave en adultos."""
+    tabla_origen: str = Field(..., description="Tabla de donde se extraen los indicadores.")
+    indicadores: list[IndicadorSalud] = Field(..., description="Lista de indicadores de salud con prevalencias.")
